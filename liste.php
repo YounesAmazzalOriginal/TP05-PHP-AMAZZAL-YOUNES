@@ -1,6 +1,7 @@
 <?php
     $titre = 'Liste des étudiants';
     require_once __DIR__ . '/config/connexion.php';
+    require_once __DIR__ . '/config/config.php';
 
     $pdo = getConnexion();
 
@@ -14,12 +15,13 @@
     // TODO 5.1 (BONUS) : préparer un SELECT avec "WHERE filiere = :filiere",
     //   lier :filiere avec bindParam() puis exécuter.
     //   En attendant, on affiche toute la liste :
-    $sql  = "SELECT id, cne, nom, prenom, email, filiere, date_naissance, date_inscription FROM etudiants WHERE filiere = :filiere";
+    $sql  = "SELECT id, cne, nom, prenom, email, filiere, date_naissance, date_inscription FROM etudiants WHERE filiere = ?";
     $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(":filiere", $filiere);
-    $stmt->execute();
+    $stmt->execute([$filtre]);
 
-    $etudiants = $stmt->fetchAll();
+    $etudiants   = $stmt->fetchAll();
+    $nbEtudiants = count($etudiants);
+    $nbColonnes  = $stmt->columnCount();
     }
 
     if ($filtre === '') {
@@ -29,13 +31,14 @@
     //   Stocker le PDOStatement retourné dans $stmt.
     $sql  = "SELECT id, cne, nom, prenom, email, filiere, date_naissance, date_inscription FROM etudiants ORDER BY nom, prenom";
     $stmt = $pdo->query($sql);
+
+    $etudiants   = $stmt->fetchAll();
+    $nbEtudiants = count($etudiants);
+    $nbColonnes  = $stmt->columnCount();
     }
 
     // TODO 4.2 : récupérer toutes les lignes avec fetchAll() dans $etudiants,
     //   puis compter les lignes (count) et les colonnes (columnCount())
-    $etudiants   = $stmt->fetchAll();
-    $nbEtudiants = count($etudiants);
-    $nbColonnes  = $stmt->columnCount();
 
     // Message après ajout / suppression (venant de ajouter.php ou supprimer.php)
     $message = '';
