@@ -1,54 +1,53 @@
 <?php
-$titre = 'Liste des étudiants';
-require_once __DIR__ . '/config/connexion.php';
+    $titre = 'Liste des étudiants';
+    require_once __DIR__ . '/config/connexion.php';
 
-$pdo = getConnexion();
+    $pdo = getConnexion();
 
-// ---------------------------------------------------------------
-// Étape 4 : lecture des étudiants
-// Bonus 5.1 : filtre par filière (requête préparée + bindParam)
-// ---------------------------------------------------------------
-$filtre = $_GET['filiere'] ?? '';
+    // ---------------------------------------------------------------
+    // Étape 4 : lecture des étudiants
+    // Bonus 5.1 : filtre par filière (requête préparée + bindParam)
+    // ---------------------------------------------------------------
+    $filtre = $_GET['filiere'] ?? '';
 
-if ($filtre !== '' && in_array($filtre, FILIERES, true)) {
+    if ($filtre !== '' && in_array($filtre, FILIERES, true)) {
     // TODO 5.1 (BONUS) : préparer un SELECT avec "WHERE filiere = :filiere",
     //   lier :filiere avec bindParam() puis exécuter.
     //   En attendant, on affiche toute la liste :
-    $sql = "SELECT FROM etudiants WHERE filiere = :filiere";
+    $sql  = "SELECT id, cne, nom, prenom, email, filiere, date_naissance, date_inscription FROM etudiants WHERE filiere = :filiere";
     $stmt = $pdo->prepare($sql);
     $stmt->bindParam(":filiere", $filiere);
     $stmt->execute();
 
     $etudiants = $stmt->fetchAll();
-}
+    }
 
-if ($filtre === '') {
+    if ($filtre === '') {
     // TODO 4.1 : exécuter avec $pdo->query() la requête qui sélectionne
     //   id, cne, nom, prenom, email, filiere, date_naissance, date_inscription
     //   de la table etudiants, triés par nom puis prénom.
     //   Stocker le PDOStatement retourné dans $stmt.
-
-    $sql = "SELECT id, cne, nom, prenom, email, filiere, date_naissance, date_inscription FROM etudiants ORDER BY nom, prenom";
+    $sql  = "SELECT id, cne, nom, prenom, email, filiere, date_naissance, date_inscription FROM etudiants ORDER BY nom, prenom";
     $stmt = $pdo->query($sql);
-}
+    }
 
-// TODO 4.2 : récupérer toutes les lignes avec fetchAll() dans $etudiants,
-//   puis compter les lignes (count) et les colonnes (columnCount())
-$etudiants   = [];
-$nbEtudiants = 0;
-$nbColonnes  = 0;
+    // TODO 4.2 : récupérer toutes les lignes avec fetchAll() dans $etudiants,
+    //   puis compter les lignes (count) et les colonnes (columnCount())
+    $etudiants   = $stmt->fetchAll();
+    $nbEtudiants = count($etudiants);
+    $nbColonnes  = $stmt->columnCount();
 
-// Message après ajout / suppression (venant de ajouter.php ou supprimer.php)
-$message = '';
-if (isset($_GET['ajout']))     { $message = 'Étudiant ajouté avec succès (id n° ' . (int) $_GET['ajout'] . ').'; }
-if (isset($_GET['supprime']))  { $message = 'Étudiant supprimé.'; }
+    // Message après ajout / suppression (venant de ajouter.php ou supprimer.php)
+    $message = '';
+    if (isset($_GET['ajout'])) {$message = 'Étudiant ajouté avec succès (id n° ' . (int) $_GET['ajout'] . ').';}
+    if (isset($_GET['supprime'])) {$message = 'Étudiant supprimé.';}
 
-require __DIR__ . '/includes/header.php';
+    require __DIR__ . '/includes/header.php';
 ?>
 <h1>Liste des étudiants</h1>
 
 <?php if ($message): ?>
-    <div class="alerte alerte-succes"><?= e($message) ?></div>
+    <div class="alerte alerte-succes"><?php echo e($message) ?></div>
 <?php endif; ?>
 
 <div class="carte">
@@ -58,7 +57,7 @@ require __DIR__ . '/includes/header.php';
             <select name="filiere" id="filiere" onchange="this.form.submit()">
                 <option value="">Toutes</option>
                 <?php foreach (FILIERES as $f): ?>
-                    <option value="<?= e($f) ?>" <?= $filtre === $f ? 'selected' : '' ?>><?= e($f) ?></option>
+                    <option value="<?php echo e($f) ?>" <?php echo $filtre === $f ? 'selected' : '' ?>><?php echo e($f) ?></option>
                 <?php endforeach; ?>
             </select>
             <noscript><button class="btn" type="submit">Filtrer</button></noscript>
@@ -66,7 +65,7 @@ require __DIR__ . '/includes/header.php';
         <a class="btn" href="ajouter.php">➕ Ajouter</a>
     </div>
 
-    <p class="info"><?= $nbEtudiants ?> étudiant(s) — <?= $nbColonnes ?> colonnes retournées par la requête</p>
+    <p class="info"><?php echo $nbEtudiants ?> étudiant(s) — <?php echo $nbColonnes ?> colonnes retournées par la requête</p>
 
     <table>
         <thead>
@@ -81,22 +80,21 @@ require __DIR__ . '/includes/header.php';
         <?php else: ?>
             <?php foreach ($etudiants as $i => $etu): ?>
                 <tr>
-                    <td><?= $i + 1 ?></td>
+                    <td><?php echo $i + 1 ?></td>
                     <!-- TODO 4.3 : afficher le CNE, le nom (en majuscules), le prénom,
                          l'e-mail et la filière de $etu, en les protégeant avec e()
                          (une cellule <td> par colonne ; la filière dans <span class="badge">) -->
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td><?php echo strtoupper($etu["nom"]) ?></td>
+                    <td><?php echo $etu["prenom"] ?></td>
+                    <td><?php echo $etu["email"] ?></td>
+                    <td><?php echo $etu["filiere"] ?></td>
                     <!-- (fourni) dates au format français -->
-                    <td><?= $etu['date_naissance'] ? date('d/m/Y', strtotime($etu['date_naissance'])) : '—' ?></td>
-                    <td><?= date('d/m/Y H:i', strtotime($etu['date_inscription'])) ?></td>
+                    <td><?php echo $etu['date_naissance'] ? date('d/m/Y', strtotime($etu['date_naissance'])) : '—' ?></td>
+                    <td><?php echo date('d/m/Y H:i', strtotime($etu['date_inscription'])) ?></td>
                     <td>
                         <!-- Bonus 5.2 : suppression en POST (jamais en GET pour une action qui modifie la base) -->
                         <form method="post" action="supprimer.php" onsubmit="return confirm('Supprimer cet étudiant ?');">
-                            <input type="hidden" name="id" value="<?= (int) $etu['id'] ?>">
+                            <input type="hidden" name="id" value="<?php echo (int) $etu['id'] ?>">
                             <button type="submit" class="btn btn-danger">Supprimer</button>
                         </form>
                     </td>
